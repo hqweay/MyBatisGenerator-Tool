@@ -1,0 +1,11 @@
+server:
+  port: 8082
+
+spring:
+  # 属性值可以为空，但是不能没有以下字段，否则启动报错
+  datasource:
+    url: jdbc:mysql://118.126.test.120:3306/test?serverTimezone=UTC
+    username:
+    password:
+    driver-class-name: com.mysql.jdbc.Driver
+

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+
+    <!-- 关于 resource 详情查看文档
+         可以用于加载配置项或者配置文件，在整个配置文件中就可以使用${propertyKey}的方式来引用配置项
+         resource：配置资源加载地址，使用resource，MBG从classpath开始找，比如com/myproject/generatorConfig.properties
+         url：配置资源加载地质，使用URL的方式，比如file:///C:/myfolder/generatorConfig.properties.
+            注意，两个属性只能选址一个;
+        另外，如果使用了mybatis-generator-maven-plugin，那么在pom.xml中定义的properties都可以直接在generatorConfig.xml中使用
+     -->
+
+    <!-- 配置 properties，一直提示找不到该文件资源。
+         解决思路 1： 这里引入的是项目的资源，所以需要把 config.properties 加入 localpath，没成功
+         解决思路 2： 直接使用 path，使用绝对地址引入资源。见下方，已成功。
+         解决思路 3： “I add the properties file to POM as resource, and it works”
+                    把配置文件作为资源文件导入 pom（maven）。应该能行，但我是 gradle没测试
+         解决思路 4： 由 3 想到，能不能把资源文件引入 gradle，暴露出来，直接使用呢？因为不太了解 gradle 语法，没测试成功。
+                    但是在网上找到了通过 Gradle 来执行 Ant Task，实现配置的方法。也就是现在用的方法。
+         还是使用 path 解决比较方便...解决思路 4 在配置文件中配置了，还需要在 gradle 配置，太麻烦了...
+
+    -->
+
+    <!-- 无法执行 <properties resource="config.properties"/>-->
+
+    <!-- 可以执行 <properties url="file:///home/A/code/skill/src/main/resources/config.yml" />-->
+
+    <context id="my" targetRuntime="MyBatis3">
+
+        <!--自动实现Serializable接口-->
+        <plugin type="org.mybatis.generator.plugins.SerializablePlugin"></plugin>
+
+        <!-- 去除自动生成的注释 -->
+        <commentGenerator>
+            <property name="suppressAllComments" value="true"></property>
+            <property name="suppressDate" value="true"></property>
+            <property name="javaFileEncoding" value="utf-8"/>
+        </commentGenerator>
+
+        <!--数据库基本信息-->
+        <jdbcConnection driverClass= "${driverClass}"
+                        connectionURL="${connectionURL}"
+                        userId="${userId}"
+                        password="${password}">
+        </jdbcConnection>
+
+        <!--生成实体类的位置以及包的名字-->
+        <!--同样Mac用户：targetProject 为全路径-->
+        <javaModelGenerator targetPackage="${modelPackage}" targetProject="${src_main_java}">
+            <!-- enableSubPackages:是否让schema作为包的后缀 -->
+            <property name="enableSubPackages" value="true" />
+            <!-- 从数据库返回的值被清理前后的空格 -->
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+
+        <!--生成映射文件存放位置-->
+        <!--同样Mac用户：targetProject 为全路径-->
+        <sqlMapGenerator targetPackage="${sqlMapperPackage}" targetProject="${src_main_resources}">
+            <!-- enableSubPackages:是否让schema作为包的后缀 -->
+            <property name="enableSubPackages" value="false"/>
+        </sqlMapGenerator>
+
+        <!--生成Dao类存放位置,mapper接口生成的位置-->
+        <!--同样Mac用户：targetProject 为全路径-->
+        <javaClientGenerator type="XMLMAPPER" targetPackage="${mapperPackage}" targetProject="${src_main_java}">
+            <!-- enableSubPackages:是否让schema作为包的后缀 -->
+            <property name="enableSubPackages" value="false"/>
+        </javaClientGenerator>
+
+
+        <!-- 配置表信息 -->
+        <!-- schema 即为数据库名
+             tableName为对应的数据库表
+             domainObjectName 要生成的实体类
+             enableCountByExample 是否生成 example类
+             每一个表，需要一条 table
+            -->
+
+        <table schema="kaoqin" tableName="course"
+               domainObjectName="testOne" enableCountByExample="false"
+               enableDeleteByExample="false" enableSelectByExample="false"
+               enableUpdateByExample="false">
+            <!-- 生成的bean的属性不采用驼峰-->
+            <property name="useActualColumnNames" value="true"/>
+        </table>
+
+        <table schema="kaoqin" tableName="course"
+               domainObjectName="testTwo" enableCountByExample="false"
+               enableDeleteByExample="false" enableSelectByExample="false"
+               enableUpdateByExample="false">
+            <!-- 生成的bean的属性不采用驼峰-->
+            <property name="useActualColumnNames" value="true"/>
+        </table>
+    </context>
+
+</generatorConfiguration>

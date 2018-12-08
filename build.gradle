@@ -1,0 +1,117 @@
+def getDbProperties = {
+    def properties = new Properties()
+    //这里最好读取 .properties 格式的文件，yml 不能正常读取
+    file("src/main/resources/mybatis/config.properties").withInputStream { inputStream ->
+        properties.load(inputStream)
+    }
+    properties
+}
+
+task mybatisGenerate << {
+    def properties = getDbProperties()
+    ant.properties['targetProject'] = projectDir.path
+    ant.properties['driverClass'] = properties.getProperty("jdbc.driverClassName")
+    ant.properties['connectionURL'] = properties.getProperty("jdbc.url")
+    ant.properties['userId'] = properties.getProperty("jdbc.username")
+    ant.properties['password'] = properties.getProperty("jdbc.password")
+    ant.properties['src_main_java'] = sourceSets.main.java.srcDirs[0].path
+    ant.properties['src_main_resources'] = sourceSets.main.resources.srcDirs[0].path
+    ant.properties['modelPackage'] = properties.getProperty("package.model")
+    ant.properties['mapperPackage'] = properties.getProperty("package.mapper")
+    ant.properties['sqlMapperPackage'] = properties.getProperty("package.xml")
+    ant.taskdef(
+            name: 'mbgenerator',
+            classname: 'org.mybatis.generator.ant.GeneratorAntTask',
+            classpath: configurations.mybatisGenerator.asPath
+    )
+    ant.mbgenerator(overwrite: true,
+            configfile: 'src/main/resources/mybatis/generator.xml', verbose: true) {
+        propertyset {
+            propertyref(name: 'targetProject')
+            propertyref(name: 'userId')
+            propertyref(name: 'driverClass')
+            propertyref(name: 'connectionURL')
+            propertyref(name: 'password')
+            propertyref(name: 'src_main_java')
+            propertyref(name: 'src_main_resources')
+            propertyref(name: 'modelPackage')
+            propertyref(name: 'mapperPackage')
+            propertyref(name: 'sqlMapperPackage')
+        }
+    }
+}
+
+
+
+buildscript {
+    ext {
+        springBootVersion = '2.1.1.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+        //添加maven仓库 mybatis-generetor
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        // mybatis-generator 插件路径mybatis-generetor
+        classpath "gradle.plugin.com.arenagod.gradle:mybatis-generator-plugin:1.4"
+    }
+}
+//从阿里云下载依赖
+allprojects {
+    repositories {
+        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+        maven{ url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'}
+    }
+}
+apply plugin: 'java'
+apply plugin: 'eclipse-wtp'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'war'
+//引入 mybatis-generator 插件mybatis-generetor
+apply plugin: "com.arenagod.gradle.MybatisGenerator"
+
+group = 'cn.hqweay'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+//    providedRuntime
+    //这里需要使用 MyBatis Generator，MySQL 驱动，以及 MyBatis Mapper.
+    //由于代码生成单独运行即可,不需要参与到整个项目的编译，因此在 build.gradle 中添加配置：
+    mybatisGenerator
+}
+
+dependencies {
+    implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation('org.mybatis.spring.boot:mybatis-spring-boot-starter:1.3.2')
+    providedRuntime('org.springframework.boot:spring-boot-starter-tomcat')
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
+    implementation 'org.junit.jupiter:junit-jupiter-api'
+
+    // https://mvnrepository.com/artifact/com.alibaba/fastjson
+    compile group: 'com.alibaba', name: 'fastjson', version: '1.2.47'
+
+    // https://mvnrepository.com/artifact/mysql/mysql-connector-java
+    compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.45'
+
+
+    mybatisGenerator 'org.mybatis.generator:mybatis-generator-core:1.3.6'
+    mybatisGenerator 'mysql:mysql-connector-java:5.1.45'
+    mybatisGenerator 'tk.mybatis:mapper:3.3.9'
+}
+
+// mybatis-generator.xml 配置路径
+mybatisGenerator {
+    verbose = true
+    configFile = 'src/main/resources/mybatis/generator.xml'
+
+}
